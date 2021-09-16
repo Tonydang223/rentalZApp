@@ -3,43 +3,109 @@ import { StyleSheet, Text, TextInput, View, ScrollView,Dimensions, TouchableOpac
 import RNPickerSelect from 'react-native-picker-select';
 import Icon from 'react-native-vector-icons/Ionicons';
 import TimePicker from '../TimePicker/TimePicker';
-import { format,parseISO,parse,parseJSON,formatISO9075 } from 'date-fns'
+import { format,parseISO,parse,parseJSON,formatISO,formatISO9075 } from 'date-fns'
 import { ROOM_OPTIONS } from '../../constants/options';
 import { FUR_OPTIONS } from '../../constants/furOption';
-const TextForm = () => {
+const TextForm = (props) => {
+    const {navigation} = props
     const initialValues = {
         propertyType:'',
         bedRooms:null, 
         dateTime: new Date(Date.now()),
-        monthlyPrice:'', 
+        monthlyPrice:null, 
         furnitureType:null,   
         note:'',     
         reporter:'',
         updatedAt: new Date(Date.now()).toISOString(),
-        img:'../../assets/images/imgbackgroundRent.jpg'
+        img:'https://img.lovepik.com/photo/50090/8657.jpg_wh860.jpg'
     }
     const [values,setValues] = useState(initialValues)
-    
+
     console.log(values)
-    const date = values.dateTime.toISOString();
-    const dateParse = parseISO(date);
-    const formatDate = formatISO9075(dateParse)
-    console.log(formatDate)
-    console.log({date:date})
+    // const date = values.dateTime.toISOString();
+    // const dateParse = parseISO(date);
+    // const formatDate = formatISO9075(dateParse)
     const onChange =(text)=>(value)=>{ 
         setValues({...values,[text]:value})
     }
-    const placeholder={
-        label:'Select any bedroom...',  
-        value:null
+    const placeholder=(name)=> {
+        const objPlaceHolder = {
+            label:`Select any ${name}`,
+            value:null
+        }
+        return objPlaceHolder
     }
+
+    const insertData=(value)=>{
+        console.log(value)
+        navigation.navigate('ListData')
+    }
+    
+    const onSubmit = (value) => {
+        if(!value) return
+        if(value.propertyType ==="" || value.note ==="" ||value.reporter ===""){
+            Alert.alert(
+                "Error Message !!!",
+                "Please don't leave any empty field",
+                [
+                  {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                  },
+                  { text: "OK", onPress: () => console.log("OK Pressed")}
+                ]
+            );
+            setIsFocused({
+                fieldOne:false,
+                fieldThree:false,
+                fieldFour:false,
+            })
+        }else if(value.bedRooms === null || value.furnitureType === null ||value.monthlyPrice === null ){
+            Alert.alert(
+                "Error Message !!!",
+                "Please select a room or furniture type or Monthly Price must not empty",
+                [
+                  {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                  },
+                  { text: "OK", onPress: () => console.log("OK Pressed")}
+                ]
+              );
+        }
+        else if(values.dateTime.getDate() === new Date(Date.now()).getDate()){
+            Alert.alert(
+                "Error Message !!!",
+                `Your time is present time 
+                if you want to change you click cancel to change time.
+                Otherwise you want set present to create then click ok
+                `
+                ,
+                [
+                  {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                  },
+                  { text: "OK", onPress: () => insertData(values)}
+                ]
+              );
+        }
+        else{
+
+            setValues(initialValues)
+        }
+    }
+    
 
     return (
         <View style={styles.containerForm}>
             <ScrollView contentContainerStyle={styles.viewScroll}>
             <View style={styles.formInside}>
             <Text style={styles.label}>Property Type</Text>
-            <TextInput style={styles.input} 
+            <TextInput style={[styles.input]} 
                 name="propertyType"
                 value={values.propertyType}
                 placeholder="Typing any property type..."
@@ -51,7 +117,7 @@ const TextForm = () => {
             useNativeAndroidPickerStyle={false}
             onValueChange={(value) => setValues({...values,bedRooms:value})}
             items={ROOM_OPTIONS}
-            placeholder={placeholder}
+            placeholder={placeholder('bedroom')}
             value={values.bedRooms}
             textInputProps={{ underlineColor: 'black' }}
             Icon={() => {
@@ -64,11 +130,15 @@ const TextForm = () => {
             }}
             />
             <Text style={styles.label}>Date and Time</Text>
-            <TimePicker dateTime={values.dateTime} setValues={setValues} values={values}/>
+            <TimePicker dateTime={values.dateTime} 
+            setValues={setValues} 
+            values={values}
+            />
             <Text style={styles.label}>Monthly Price</Text>
-            <TextInput style={styles.input} 
+            <TextInput style={[styles.input]} 
                 name="propertyType"
                 value={values.monthlyPrice}
+                keyboardType="numeric"
                 placeholder="Typing monthly price here..."
                 onChangeText={onChange('monthlyPrice')}
 
@@ -79,7 +149,7 @@ const TextForm = () => {
             useNativeAndroidPickerStyle={false}
             onValueChange={(value) => setValues({...values,furnitureType:value})}
             items={FUR_OPTIONS}
-            placeholder={placeholder}
+            placeholder={placeholder('furniture type')}
             value={values.furnitureType}
             textInputProps={{ underlineColor: 'black' }}
             Icon={() => {
@@ -92,7 +162,7 @@ const TextForm = () => {
             }}
             />
             <Text style={styles.label}>Notes</Text>
-            <TextInput style={styles.inputTextArea}
+            <TextInput style={[styles.inputTextArea]}
                 name="note"
                 value={values.note}
                 multiline
@@ -101,7 +171,7 @@ const TextForm = () => {
 
             />
             <Text style={styles.label}>Reporter</Text>
-            <TextInput style={styles.input} 
+            <TextInput style={[styles.input]} 
                 name="reporter"
                 value={values.reporter}
                 placeholder="Typing your name here..."
@@ -119,6 +189,7 @@ const TextForm = () => {
                     },
                     styles.pressBtn
                 ]}
+                onPress={()=>onSubmit(values)}
                 >
                     <Text style={styles.text}>CREATE</Text>
                 </Pressable>
@@ -168,7 +239,6 @@ const styles = StyleSheet.create({
        height:48,
        width:260,
        padding:10,
-       borderColor:'#000000',
        borderStyle:'solid',
        borderWidth:1,
        marginTop:8,

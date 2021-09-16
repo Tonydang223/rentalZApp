@@ -14,7 +14,6 @@ const TimePicker = (props) => {
             setVisible(false)
         }
         setValues({...values,dateTime:currentDate})
-
     }
     const showMode = (currrentMode)=>{
         setVisible(true)
@@ -28,7 +27,7 @@ const TimePicker = (props) => {
     }
     return (
        <View style={styles.wrapper}>
-          <Text style={styles.dateTime}>{dateTime && formatISO9075(dateTime)}</Text>
+          <Text style={styles.dateTime}>{dateTime && formatISO9075(dateTime) }</Text>
           <View style={styles.iconContainer}>
              <Icon name="calendar-outline" size={23} color='black' onPress={showDatePicker}/>
              <Icon style={{marginLeft:10, marginRight:-6}} name="time-outline" size={23} 

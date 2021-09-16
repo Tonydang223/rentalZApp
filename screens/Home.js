@@ -2,14 +2,14 @@ import React from 'react';
 import { StyleSheet, Text, View,Dimensions } from 'react-native';
 import TextForm from './../components/Forms/TextForm';
 
-export default function Home() {
+export default function Home({navigation}) {
   const heightFull = Dimensions.get('screen').height
   console.log(heightFull)
 
   return (
     <View style={styles.container}>
       <Text style={styles.headingText}>RentalZ</Text>
-      <TextForm/>
+      <TextForm navigation={navigation}/>
     </View>
   );
 }
