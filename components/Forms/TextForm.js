@@ -6,13 +6,14 @@ import TimePicker from '../TimePicker/TimePicker';
 import { format,parseISO,parse,parseJSON,formatISO,formatISO9075 } from 'date-fns'
 import { ROOM_OPTIONS } from '../../constants/options';
 import { FUR_OPTIONS } from '../../constants/furOption';
+import configDB from '../../dbconfig/db';
 const TextForm = (props) => {
     const {navigation} = props
     const initialValues = {
         propertyType:'',
         bedRooms:null, 
         dateTime: new Date(Date.now()),
-        monthlyPrice:null, 
+        monthlyPrice:'', 
         furnitureType:null,   
         note:'',     
         reporter:'',
@@ -20,8 +21,10 @@ const TextForm = (props) => {
         img:'https://img.lovepik.com/photo/50090/8657.jpg_wh860.jpg'
     }
     const [values,setValues] = useState(initialValues)
-
+    // console.log({num:parseFloat(number)})
+    // console.log(values.updatedAt)
     console.log(values)
+    
     // const date = values.dateTime.toISOString();
     // const dateParse = parseISO(date);
     // const formatDate = formatISO9075(dateParse)
@@ -35,15 +38,33 @@ const TextForm = (props) => {
         }
         return objPlaceHolder
     }
-
-    const insertData=(value)=>{
-        console.log(value)
-        navigation.navigate('ListData')
-    }
     
-    const onSubmit = (value) => {
+    const insertData= async(value)=>{
+        const {propertyType,bedRooms,furnitureType,note,reporter,updatedAt,img,monthlyPrice,dateTime} = value
+        const floatPrice = parseFloat(monthlyPrice)
+        const stringTime = dateTime.toISOString()
+        try {
+            await configDB.dbOpen().transaction((tx)=>{
+                tx.executeSql(
+                    `INSERT INTO rentalZs 
+                    (propertyType,bedRoom,createdAt,monthlyPrice,furnitureType,note,reporter,updatedAt,image)
+                    VALUES (?,?,?,?,?,?,?,?,?)
+                    `,
+                    [propertyType,bedRooms,stringTime,floatPrice,furnitureType,note,reporter,updatedAt,img],
+                    (tx,result)=>{
+                        console.log(result)
+                        navigation.navigate("ListData")
+                    }
+                )
+                console.log("Insert Successful!!!")
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    const onSubmit = async (value) => {
         if(!value) return
-        if(value.propertyType ==="" || value.note ==="" ||value.reporter ===""){
+        if(value.propertyType ==="" || value.note ==="" ||value.reporter ==="" ||value.monthlyPrice === "" ){
             Alert.alert(
                 "Error Message !!!",
                 "Please don't leave any empty field",
@@ -56,12 +77,8 @@ const TextForm = (props) => {
                   { text: "OK", onPress: () => console.log("OK Pressed")}
                 ]
             );
-            setIsFocused({
-                fieldOne:false,
-                fieldThree:false,
-                fieldFour:false,
-            })
-        }else if(value.bedRooms === null || value.furnitureType === null ||value.monthlyPrice === null ){
+
+        }else if(value.bedRooms === null || value.furnitureType === null ){
             Alert.alert(
                 "Error Message !!!",
                 "Please select a room or furniture type or Monthly Price must not empty",
@@ -89,12 +106,13 @@ const TextForm = (props) => {
                     onPress: () => console.log("Cancel Pressed"),
                     style: "cancel"
                   },
-                  { text: "OK", onPress: () => insertData(values)}
+                  { text: "OK", onPress: () => insertData(value)}
                 ]
               );
         }
         else{
-
+            console.log(value)
+            insertData(value)
             setValues(initialValues)
         }
     }
@@ -186,6 +204,14 @@ const TextForm = (props) => {
                        backgroundColor: pressed?
                        "rgb(0,0,0,0.2)":
                        "#06a9c9",
+                       opacity:values.propertyType
+                ||values.bedRooms
+                ||values.note
+                ||values.note
+                ||values.bedRooms
+                ||values.monthlyPrice
+                ||values.furnitureType
+                ?1:0.5
                     },
                     styles.pressBtn
                 ]}
@@ -202,15 +228,20 @@ const styles = StyleSheet.create({
       display:'flex',
       flexDirection:'column',
       justifyContent:'center',
+      alignItems:'center',
       marginTop:-17,
-      height:540
+      height:540,
+      width:'100%'
     },
     viewScroll:{
-        flexGrow:1
+        flexGrow:1,
+        width:'100%'
     },
     formInside:{
         display:'flex',
         flexDirection:'column',
+        marginLeft:56,
+        marginRight:56,
         padding:15
     },
     label:{
@@ -227,7 +258,8 @@ const styles = StyleSheet.create({
         borderRadius:4,
         borderColor:'#000000',
         borderStyle:'solid',
-        marginTop:95
+        marginTop:95,
+        marginLeft:5
     },
     text:{
         textAlign:'center',
